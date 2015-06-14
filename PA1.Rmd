@@ -1,0 +1,47 @@
+#Loading and preprocessing the data
+```{r}
+dat=read.csv("activity.csv")
+summary(dat)
+```
+What is mean total number of steps taken per day?
+```{r}
+totals=tapply(dat$steps, dat$date, sum, na.rm=T)
+hist(totals)
+means=tapply(dat$steps, dat$date, mean, na.rm=T)
+medians=tapply(dat$steps, dat$date, median, na.rm=T)
+means.by.interval=tapply(dat$steps, dat$interval, mean, na.rm=T)
+plot(means.by.interval)
+means.by.interval[which(means.by.interval==max(means.by.interval))] #max
+```
+Imputing missing values
+Number missing
+```{r}
+sum(is.na(dat$steps))
+```
+Fill NAs
+```{r}
+dat.noNA=dat
+dat.noNA$steps[is.na(dat.noNA$steps)]=
+  means.by.interval[as.character(dat.noNA$interval[is.na(dat.noNA$steps)])]
+totals.noNA=tapply(dat.noNA$steps, dat.noNA$date, sum, na.rm=t)
+hist(totals.noNA)
+```
+
+Does it change anything?
+
+
+```{r}
+c(mean(dat.noNA$steps), median(dat.noNA$steps), mean(dat$steps,na.rm=T), median(dat$steps,na.rm=T))
+```
+Nothing changes because of the filling methodology.
+
+Are there differences in activity patterns between weekdays and weekends?
+```{r}
+dat$weekday=ifelse(weekdays(as.Date(dat$date))%in%c("Saturday","Sunday"), "weekend","weekday")
+require(lattice)
+plot.data=tapply(dat$steps, list(dat$interval, dat$weekday), mean,na.rm=T)
+require(reshape)
+plot.data=melt(plot.data)
+
+xyplot(value~X1|X2, plot.data, type="l", layout=c(1,2),xlab="interval", ylab="average steps")
+```
